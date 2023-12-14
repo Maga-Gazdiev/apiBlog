@@ -14,20 +14,17 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|email|ends_with:gmail.com,yandex.ru,mail.ru,yandex.com,mail.com,gmail.ru',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        $request->validate([
+            'email' => 'required|email|ends_with:gmail.com,yandex.ru,mail.ru,yandex.com,mail.com,gmail.ru',
+            'name' => 'required|string|max:255',
+            'password' => ['required', 'string', 'min:8'],
         ]);
-
-        if ($validator->fails()) {
-            return response(['errors' => $validator->errors()->all()], 422);
-        }
-
-        $user = User::create(array_merge(
-            $validator->validated(),
-            ['password' => Hash::make($request->password)]
-        ));
+        
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt($request->password),
+        ]);
 
         $token = $user->createToken('authToken')->plainTextToken;
         $user = Auth::user();
